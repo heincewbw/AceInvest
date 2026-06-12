@@ -1,14 +1,11 @@
+import StockTabs from "@/components/stock/StockTabs";
+import PriceChart from "@/components/stock/PriceChart";
+import WatchlistButton from "@/components/stock/WatchlistButton";
 import { getStockData } from "@/lib/yahoo-finance";
 import { calculateFairValue } from "@/lib/fair-value";
 import { calculateHealthScore } from "@/lib/health-score";
-import FairValueBreakdown from "@/components/stock/FairValueBreakdown";
-import HealthScoreGauge from "@/components/stock/HealthScoreGauge";
-import FundamentalsGrid from "@/components/stock/FundamentalsGrid";
-import PriceChart from "@/components/stock/PriceChart";
-import WatchlistButton from "@/components/stock/WatchlistButton";
 import { getDb } from "@/lib/db";
 import type { WatchlistItem } from "@/types/stock";
-import { notFound } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +32,15 @@ export default async function StockPage({ params }: PageProps) {
   let data;
   try {
     data = await getStockData(norm);
-  } catch {
-    notFound();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Failed to load stock data";
+    return (
+      <div className="text-center py-24 space-y-4">
+        <div className="text-2xl font-bold text-red-400">Could not load {norm}</div>
+        <div className="text-slate-400 text-sm">{message}</div>
+        <a href="/" className="text-blue-400 hover:underline text-sm">← Back to home</a>
+      </div>
+    );
   }
 
   const [fairValueResult, healthResult] = await Promise.all([
@@ -112,5 +116,3 @@ export default async function StockPage({ params }: PageProps) {
   );
 }
 
-// Client tabs component
-import StockTabs from "@/components/stock/StockTabs";
