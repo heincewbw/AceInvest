@@ -1,4 +1,5 @@
-import yahooFinance from "yahoo-finance2";
+import { YahooFinance } from "yahoo-finance2";
+const yahooFinance = new YahooFinance();
 import { getCached, setCache } from "./db";
 import type { StockData, StockQuote, StockFundamentals } from "@/types/stock";
 
