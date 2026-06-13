@@ -140,5 +140,6 @@ export interface SectorMultiples {
   ps: number;
   evEbitda: number;
   evRevenue: number;
+  evEbit: number;
   pfcf: number;
 }

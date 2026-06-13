@@ -38,7 +38,7 @@ export default function HomePage() {
           <div className="text-2xl font-black text-blue-400 mb-2">14</div>
           <div className="font-semibold mb-2">Valuation Models</div>
           <div className="text-sm text-slate-400 space-y-1">
-            {["DCF (5Y FCF Projection)","Graham Number & Formula","Peter Lynch PEG=1","EV/EBITDA, P/E, P/B, P/S","DDM Gordon Growth","P/FCF, EV/Revenue","Residual Income, NAV, EPV"].map((m) => (
+            {["5Y/10Y DCF Terminal Growth Exit","5Y/10Y DCF Revenue Exit","5Y/10Y DCF EBITDA Exit","P/E, P/B, P/S Multiples","EV/EBITDA, EV/EBIT, EV/Revenue","DDM Stable Growth & Multi-Stage"].map((m) => (
               <div key={m} className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                 {m}

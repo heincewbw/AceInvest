@@ -1,18 +1,12 @@
 import type { StockData, FairValueResult, FairValueModelResult } from "@/types/stock";
-import { dcf } from "./dcf";
-import { grahamNumber } from "./graham-number";
-import { grahamFormula } from "./graham-formula";
-import { peterLynch } from "./peter-lynch";
-import { evEbitda } from "./ev-ebitda";
+import { dcf5yTerminalGrowth, dcf10yTerminalGrowth, dcf5yRevenueExit, dcf10yRevenueExit, dcf5yEbitdaExit, dcf10yEbitdaExit } from "./dcf";
 import { peMultiple } from "./pe-multiple";
 import { pbMultiple } from "./pb-multiple";
 import { psMultiple } from "./ps-multiple";
-import { ddm } from "./ddm";
-import { pfcfMultiple } from "./pfcf";
+import { evEbitda } from "./ev-ebitda";
 import { evRevenue } from "./ev-revenue";
-import { residualIncome } from "./residual-income";
-import { nav } from "./nav";
-import { earningsPowerValue } from "./earnings-power-value";
+import { evEbit } from "./ev-ebit";
+import { ddm, ddmMultiStage } from "./ddm";
 
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
@@ -29,74 +23,74 @@ export function calculateFairValue(data: StockData): FairValueResult {
 
   const modelResults: FairValueModelResult[] = [
     {
-      model: "DCF (5Y)",
-      value: dcf(f),
+      model: "5Y DCF Terminal Growth Exit",
+      value: dcf5yTerminalGrowth(f, sector),
       applicable: f.freeCashflow != null && f.sharesOutstanding != null,
     },
     {
-      model: "Graham Number",
-      value: grahamNumber(f),
-      applicable: f.trailingEps != null && f.bookValuePerShare != null,
-    },
-    {
-      model: "Graham Formula",
-      value: grahamFormula(f),
-      applicable: f.trailingEps != null,
-    },
-    {
-      model: "Peter Lynch (PEG=1)",
-      value: peterLynch(f),
-      applicable: f.trailingEps != null && f.epsGrowth != null,
-    },
-    {
-      model: "EV/EBITDA Multiple",
-      value: evEbitda(f, sector),
-      applicable: f.ebitda != null && f.sharesOutstanding != null,
-    },
-    {
-      model: "P/E Multiple",
-      value: peMultiple(f, sector),
-      applicable: f.trailingEps != null,
-    },
-    {
-      model: "P/B Multiple",
-      value: pbMultiple(f, sector),
-      applicable: f.bookValuePerShare != null,
-    },
-    {
-      model: "P/S Multiple",
-      value: psMultiple(f, sector),
-      applicable: f.revenuePerShare != null,
-    },
-    {
-      model: "DDM Gordon Growth",
+      model: "Dividends: Stable Growth",
       value: ddm(f),
       applicable: f.dividendRate != null && f.dividendRate > 0,
     },
     {
-      model: "P/FCF Multiple",
-      value: pfcfMultiple(f, sector),
-      applicable: f.freeCashflow != null && f.sharesOutstanding != null,
+      model: "P/E Multiples",
+      value: peMultiple(f, sector),
+      applicable: f.trailingEps != null,
     },
     {
-      model: "EV/Revenue Multiple",
+      model: "Revenue Multiples",
       value: evRevenue(f, sector),
       applicable: f.totalRevenue != null && f.sharesOutstanding != null,
     },
     {
-      model: "Residual Income",
-      value: residualIncome(f),
-      applicable: f.bookValuePerShare != null && f.returnOnEquity != null,
+      model: "Dividends: Multi-Stage",
+      value: ddmMultiStage(f),
+      applicable: f.dividendRate != null && f.dividendRate > 0,
     },
     {
-      model: "NAV (Asset-Based)",
-      value: nav(f),
-      applicable: f.totalAssets != null && f.totalLiabilities != null && f.sharesOutstanding != null,
-    },
-    {
-      model: "Earnings Power Value",
-      value: earningsPowerValue(f),
+      model: "Multiples Valuation: EBIT",
+      value: evEbit(f, sector),
       applicable: f.ebit != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "Multiples Valuation: Price / Sales",
+      value: psMultiple(f, sector),
+      applicable: f.revenuePerShare != null,
+    },
+    {
+      model: "EBITDA Multiples",
+      value: evEbitda(f, sector),
+      applicable: f.ebitda != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "Multiples Valuation: Price / Book",
+      value: pbMultiple(f, sector),
+      applicable: f.bookValuePerShare != null,
+    },
+    {
+      model: "5Y DCF Revenue Exit",
+      value: dcf5yRevenueExit(f, sector),
+      applicable: f.freeCashflow != null && f.totalRevenue != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "10Y DCF EBITDA Exit",
+      value: dcf10yEbitdaExit(f, sector),
+      applicable: f.freeCashflow != null && f.ebitda != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "10Y DCF Revenue Exit",
+      value: dcf10yRevenueExit(f, sector),
+      applicable: f.freeCashflow != null && f.totalRevenue != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "5Y DCF EBITDA Exit",
+      value: dcf5yEbitdaExit(f, sector),
+      applicable: f.freeCashflow != null && f.ebitda != null && f.sharesOutstanding != null,
+    },
+    {
+      model: "10Y DCF Terminal Growth Exit",
+      value: dcf10yTerminalGrowth(f, sector),
+      applicable: f.freeCashflow != null && f.sharesOutstanding != null,
     },
   ];
 
