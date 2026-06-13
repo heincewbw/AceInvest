@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { YahooFinance } from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 const yahooFinance = new YahooFinance();
 import { normalizeTicker } from "@/lib/yahoo-finance";
 
