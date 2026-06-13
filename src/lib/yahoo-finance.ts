@@ -1,10 +1,23 @@
 import YahooFinance from "yahoo-finance2";
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 import { getCached, setCache } from "./db";
 import type { StockData, StockQuote, StockFundamentals } from "@/types/stock";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 500): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < retries - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  throw lastError;
+}
 
 export function detectMarket(ticker: string): "IDX" | "US" {
   return ticker.toUpperCase().endsWith(".JK") ? "IDX" : "US";
@@ -22,9 +35,9 @@ export async function getStockData(rawTicker: string): Promise<StockData> {
 
   const [quoteResult, summaryResult] = await Promise.allSettled([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (yahooFinance.quote as any)(ticker) as Promise<AnyRecord>,
+    withRetry(() => (yahooFinance.quote as any)(ticker) as Promise<AnyRecord>),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (yahooFinance.quoteSummary as any)(ticker, {
+    withRetry(() => (yahooFinance.quoteSummary as any)(ticker, {
       modules: [
         "financialData",
         "defaultKeyStatistics",
@@ -34,7 +47,7 @@ export async function getStockData(rawTicker: string): Promise<StockData> {
         "cashflowStatementHistory",
         "incomeStatementHistoryQuarterly",
       ],
-    }) as Promise<AnyRecord>,
+    }) as Promise<AnyRecord>),
   ]);
 
   if (quoteResult.status === "rejected") {
@@ -160,7 +173,7 @@ export async function getStockData(rawTicker: string): Promise<StockData> {
 
 export async function searchStocks(query: string): Promise<{ ticker: string; name: string; exchange: string }[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const results = await (yahooFinance.search as any)(query, { newsCount: 0 }) as AnyRecord;
+  const results = await withRetry(() => (yahooFinance.search as any)(query, { newsCount: 0 }) as Promise<AnyRecord>);
   const quotes: AnyRecord[] = results.quotes ?? [];
   return quotes
     .filter((r) => r.quoteType === "EQUITY")

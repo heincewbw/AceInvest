@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import YahooFinance from "yahoo-finance2";
-const yahooFinance = new YahooFinance();
+const yahooFinance = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 import { normalizeTicker } from "@/lib/yahoo-finance";
+
+async function withRetry<T>(fn: () => Promise<T>, retries = 3, delayMs = 500): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < retries - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  throw lastError;
+}
 
 export async function GET(
   req: NextRequest,
@@ -18,12 +31,12 @@ export async function GET(
   try {
     const norm = normalizeTicker(ticker);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const history = await (yahooFinance.chart as any)(norm, {
+    const history = await withRetry(() => (yahooFinance.chart as any)(norm, {
       period1: startDate,
       period2: endDate,
       interval: "1d",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }) as any;
+    }) as Promise<any>);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bars = (history.quotes ?? []).filter((q: any) =>
